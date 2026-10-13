@@ -1,0 +1,20 @@
+[Unit]
+Description=warships.dillrellis.com static site server
+After=network.target
+
+[Service]
+Type=simple
+User=warships
+Group=warships
+WorkingDirectory=/srv/warships
+Environment=NODE_ENV=production
+# Serves dist/ on 127.0.0.1:3000 (see "start" in package.json); Nginx proxies to it.
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
