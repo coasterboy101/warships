@@ -1,3 +1,4 @@
 deploy/deploy.sh text eol=lf
 deploy/nginx.conf text eol=lf
 deploy/*.service text eol=lf
+deploy/update-deps.sh text eol=lf
