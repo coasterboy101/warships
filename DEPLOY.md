@@ -7,6 +7,7 @@ The site runs on its own DigitalOcean droplet (Debian 13 "trixie", 64-bit). Ever
 | `deploy/nginx.conf` | Nginx site for `warships.dillrellis.com`: reverse proxies to `127.0.0.1:3000`, gzips responses, and sets cache headers (`/assets/` cached forever, everything else revalidated) |
 | `deploy/warships.service` | systemd unit that runs `npm start`, which serves `dist/` on `127.0.0.1:3000` |
 | `deploy/deploy.sh` | Pulls a branch, runs `npm ci` and `npm run build`, and restarts the service |
+| `deploy/update-deps.sh` | Updates the npm packages `npm audit` reports as vulnerable, rebuilds, and restarts the service |
 
 Requests flow: browser -> Nginx (ports 80/443, TLS) -> Node (`sirv`, loopback port 3000) -> `dist/`.
 
@@ -21,6 +22,23 @@ ssh root@<droplet-ip> /srv/warships/deploy/deploy.sh
 ```
 
 The script discards any local changes in `/srv/warships` and resets it to `origin/main`. Pass a branch name as an argument to deploy something else, for example `deploy.sh dev`.
+
+### Updating vulnerable packages
+
+`deploy/update-deps.sh` runs `npm audit` in the checkout and updates every package it reports. A vulnerable direct dependency goes to its latest release, even a new major version. A vulnerable transitive dependency goes to the newest version its dependents' ranges allow. Once the build and the tests pass, the script restarts the service and prints the changes and whatever `npm audit` still reports. If an install, the build or the tests fail, it restores `package.json` and `package-lock.json`, rebuilds the old versions and restarts, so the site keeps running.
+
+```sh
+ssh root@<droplet-ip> /srv/warships/deploy/update-deps.sh --dry-run   # list what would be updated
+ssh root@<droplet-ip> /srv/warships/deploy/update-deps.sh
+```
+
+The next `deploy.sh` resets the checkout to `origin/main` and undoes the update. Copy the two files back, commit them on `dev`, and release them as usual:
+
+```sh
+scp root@<droplet-ip>:/srv/warships/package.json root@<droplet-ip>:/srv/warships/package-lock.json .
+```
+
+A package that `npm audit` still reports has no fixed version within its dependents' ranges. It needs a new upstream release or an `overrides` entry in `package.json`.
 
 ### Droplet dependencies
 
