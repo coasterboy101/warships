@@ -9,7 +9,7 @@ Group=warships
 WorkingDirectory=/srv/warships
 Environment=NODE_ENV=production
 # Serves dist/ on 127.0.0.1:3000 (see "start" in package.json); Nginx proxies to it.
-ExecStart=/usr/bin/npm start
+ExecStart=/usr/local/bin/npm start
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
